@@ -343,7 +343,7 @@ model.eval()
 test_dataset = train_test_valid_dataset['test']
 for idx in (11, 21, 31, 41, 51):
     print("Input        :", test_dataset['SRC'][idx])
-    print("Prediction   :", predict(preprocessing(test_dataset['TRG'][idx])))
+    print("Prediction   :", predict(preprocessing(test_dataset['SRC'][idx])))
     print("Ground Truth :", test_dataset['TRG'][idx],"\n")
 
 # %%
