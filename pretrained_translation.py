@@ -50,15 +50,15 @@ for file in file_list:
 
 df.head()
 
-df.rename(columns={"번역문": "eng"}, errors="raise", inplace=True)
-df.rename(columns={"원문": "kor"}, errors="raise", inplace=True)
+df.rename(columns={"번역문": "SRC"}, errors="raise", inplace=True)
+df.rename(columns={"원문": "TRG"}, errors="raise", inplace=True)
 
 train_data = df.sample(n=1024*128, # number of items from axis to return.
           random_state=1234) # seed for random number generator for reproducibility
 
 #%%
 raw_eng = []
-for sentence in train_data['eng']:
+for sentence in train_data['SRC']:
     sentence = sentence.lower().strip()
     # creating a space between a word and the punctuation following it
     # eg: "he is a boy." => "he is a boy ."
@@ -89,7 +89,7 @@ for sentence in train_data['eng']:
     raw_eng.append(sentence)
 
 raw_kor = []
-for sentence in train_data['kor']:
+for sentence in train_data['TRG']:
     # 구두점에 대해서 띄어쓰기
     # ex) 12시 땡! -> 12시 땡 !
     sentence = re.sub(r"([?.!,])", r" \1 ", sentence)
@@ -101,15 +101,15 @@ print(raw_kor[:5])
 df1 = pd.DataFrame(raw_eng)
 df2 = pd.DataFrame(raw_kor)
 
-df1.rename(columns={0: "eng"}, errors="raise", inplace=True)
-df2.rename(columns={0: "kor"}, errors="raise", inplace=True)
+df1.rename(columns={0: "SRC"}, errors="raise", inplace=True)
+df2.rename(columns={0: "TRG"}, errors="raise", inplace=True)
 
 train_df = pd.concat([df1, df2], axis=1)
 
 print('Translation Pair :',len(train_df)) # 리뷰 개수 출력
 
-raw_src = train_df['eng'].tolist()
-raw_trg = train_df['kor'].tolist()
+raw_src = train_df['SRC'].tolist()
+raw_trg = train_df['TRG'].tolist()
 
 train_df.to_csv(path+'/Translation_dataset.csv',index = False)
 
@@ -143,8 +143,8 @@ MODEL = "google/mt5-small"
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
 def tokenize_sample_data(data):
-  input_feature = tokenizer(data["eng"], truncation=True, max_length=512)
-  label = tokenizer(data["kor"], truncation=True, max_length=128)
+  input_feature = tokenizer(data["SRC"], truncation=True, max_length=512)
+  label = tokenizer(data["TRG"], truncation=True, max_length=128)
   return {
     "input_ids": input_feature["input_ids"],
     "attention_mask": input_feature["attention_mask"],
@@ -153,7 +153,7 @@ def tokenize_sample_data(data):
 
 tokenized = train_test_valid_dataset.map(
   tokenize_sample_data,
-  remove_columns=["eng", "kor"],
+  remove_columns=["SRC", "TRG"],
   batched=True,
   batch_size=128)
 
@@ -342,8 +342,8 @@ def predict(text):
 model.eval()
 test_dataset = train_test_valid_dataset['test']
 for idx in (11, 21, 31, 41, 51):
-    print("Input        :", test_dataset['eng'][idx])
-    print("Prediction   :", predict(preprocessing(test_dataset['eng'][idx])))
-    print("Ground Truth :", test_dataset['kor'][idx],"\n")
+    print("Input        :", test_dataset['SRC'][idx])
+    print("Prediction   :", predict(preprocessing(test_dataset['TRG'][idx])))
+    print("Ground Truth :", test_dataset['TRG'][idx],"\n")
 
 # %%
